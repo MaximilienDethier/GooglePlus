@@ -22,6 +22,40 @@ public function ajouter($data)
 	$this->db->query($sql);
 }
 
+public function infoModifier($id)
+{
+	$this->db->select('liens.*');
+	$this->db->from('liens');
+	$this->db->where('liens.lien_id', $id );
+
+	$query = $this->db->get();
+	return $query->row_array();
+}
+
+public function getLastId($url)
+{
+	$this->db->select('liens.lien_id');
+	$this->db->from('liens');
+	$this->db->where('liens.url', $url );
+	$this->db->order_by('lien_id', DESC);
+
+	$query = $this->db->get();
+	return $query->row();	
+}
+
+public function modifier($data)
+{
+	$updateData = array(
+               'title' => $data['titre'],
+               'url' => $data['contenu'],
+               'meta' => $data["description"]
+            );
+
+	$this->db->where('lien_id', $data['idpost']);
+	$this->db->update('liens', $updateData); 
+}
+
+
 public function supprimer($id)
 {
 	$sql = "DELETE FROM liens

@@ -60,15 +60,6 @@ public function signUp()
 
 	$data['titre'] = 'Google Plus - Inscrivez-vous !';
 
-	if(!$this->session->userdata('logged_in'))
-	{
-		$data['boolConnect']=false;
-	}
-	else
-	{
-		$data['boolConnect']=true;
-	}
-
 	$data['vue'] = $this->load->view('sign', $data, TRUE);
 
 	$this->load->view('layout', $data);
@@ -81,20 +72,27 @@ public function signUpProcess(){
 	$data['mdp'] = $this->input->post('mdp');
 	$data['email'] = $this->input->post('email');
 
-	$this->M_Member->ajouter($data);
+	if($data['nom']==""||$data['mdp']==""||$data['email']==""){
+
+		redirect('error/pasChamps');
+
+	}
+
+	else{
+
+		$this->M_Member->ajouter($data);
 	
-	$id_member= $this->M_Member->getIdMember($data);
-	$name_member= $this->M_Member->getNameMember($data);
+		$id_member= $this->M_Member->getIdMember($data);
+		$name_member= $this->M_Member->getNameMember($data);
 
-	$this->session->set_userdata('logged_in', true);
+		$this->session->set_userdata('logged_in', true);
 
-	$this->session->set_userdata('id_member', $id_member->membre_id);
-	$this->session->set_userdata('name_member', $name_member->nom);
+		$this->session->set_userdata('id_member', $id_member->membre_id);
+		$this->session->set_userdata('name_member', $name_member->nom);
 	
-
-
-	redirect('lien/lister');
-
+		redirect('lien/lister');
+		
+	}
 
 }
 

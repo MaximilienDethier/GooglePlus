@@ -46,7 +46,7 @@ public function __construct(){
 
 		if(preg_match('#http://www.#', $dataList['contenu']))
 		{
-			
+
 			$url= $dataList['contenu'];
 		}
 		else
@@ -60,13 +60,19 @@ public function __construct(){
 		$html='';
 							
 		$ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false ); 
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 
         $html = curl_exec($ch);
+
+		if(!preg_match('#HTTP/1.1 200#', $html))
+		{
+			redirect('error/mauvais_lien');
+		}
+
         curl_close($ch);
 
 		$dom = new DomDocument();
@@ -75,13 +81,11 @@ public function __construct(){
 		//defaults values
 
 		$titre = "Titre du site";
-		$description = "Désolé, le site ne possède pas de description !";
-		$images = "";
+		$description = "Désolé, le site ne possède pas de description!";
 
 		//end defaults
 
 		$titre = $dom->getElementsByTagName('title')->item(0)->nodeValue;
-		
 		$nodes = $dom ->getElementsByTagName('meta');
 
 		foreach($nodes as $node)
@@ -117,12 +121,41 @@ public function __construct(){
 		$this->session->set_userdata('titre', $titre);
 		$this->session->set_userdata('contenu', $dataList['contenu']);
 		$this->session->set_userdata('description', $description);
+		$this->session->set_userdata('imageChoisie', $dataList['choix']);
 		$this->session->set_userdata('liens', $dataList['liens']);
 
 		$data['vue'] = $this->load->view('verifier', $dataList, true);
 		$data['titre'] = 'Mes liens intéressants - Envoyer ?';
 
 		$this->load->view('layout', $data);
+	}
+
+	public function modifier()
+	{
+		$id = $this->uri->segment(3);
+		$dataList = $this->M_Lien->infoModifier($id);
+
+		$dataList['idpost'] = $id;
+		$data['vue'] = $this->load->view('modifier', $dataList, true);
+		$data['titre'] = 'Mes liens intéressants';
+		
+		$this->load->view('layout', $data);
+	}
+
+	public function updateProcess()
+	{
+		$data['contenu'] = $this->input->post('contenu');
+		$data['titre'] = $this->input->post('titre');
+		$data['description'] = $this->input->post('description');
+		$data['idpost'] = $this->input->post('idpost');
+		
+		$this->M_Lien->modifier($data);
+
+		if(!$this->input->is_ajax_request())
+		{
+			redirect('lien/successUpdate');
+		}
+		
 	}
 
 	public function choisir()
@@ -137,6 +170,7 @@ public function __construct(){
 		$dataList['images'] = $this->session->userdata('arrayPic');
 		$dataList['liens'] = $this->session->userdata('liens');
 		$dataList['choix'] = $imageChoisie;
+		$this->session->set_userdata('imageChoisie', $dataList['choix']);
 
 		$data['vue'] = $this->load->view('verifier', $dataList, true);
 		$data['titre'] = 'Mes liens intéressants - Envoyer ?';
@@ -149,7 +183,7 @@ public function __construct(){
 	{
 
 		$data['id_member'] = $this->session->userdata('id_member');
-		
+
 		$data['contenu'] = $this->input->post('contenu');
 		$data['titre'] = $this->input->post('hiddenTitre');
 		$data['description'] = $this->input->post('hiddenDescription');
@@ -157,7 +191,16 @@ public function __construct(){
 		
 		$this->M_Lien->ajouter($data);
 
-		redirect('lien/successAdd');
+		$url = $data['contenu'];
+		$idNewPost = $this->M_Lien->getLastId($url);
+		$data['idNewPost'] = $idNewPost;
+
+		alert($idNewPost);
+
+		if(!$this->input->is_ajax_request())
+		{
+			redirect('lien/successAdd');
+		}
 	}
 
 	public function successAdd(){
@@ -171,6 +214,19 @@ public function __construct(){
 
 		$this->load->view('layout', $data);
 	}
+
+	public function successUpdate(){
+
+		$dataList="";
+		$data['boolConnect']=false;
+
+		$data['vue'] = $this->load->view('successUpdate', $dataList, true);
+
+		$data['titre'] = 'Modification réussie !';
+
+		$this->load->view('layout', $data);
+	}
+
 
 	public function supprimer(){
 

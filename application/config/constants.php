@@ -39,8 +39,9 @@ define('FOPEN_READ_WRITE_CREATE_STRICT',		'x+b');
 
 /* Custom constants */
 
-define('CSS_DIR', '/GooglePlus/web/css/');
-define('JS_DIR', '/GooglePlus/web/js/');
+define('CSS_DIR', 'web/css/');
+define('JS_DIR', 'web/js/');
+define('IMG_DIR', 'web/images/');
 
 /* End of file constants.php */
 /* Location: ./application/config/constants.php */
